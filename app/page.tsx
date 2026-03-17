@@ -1,65 +1,174 @@
-import Image from "next/image";
+'use client';
+
+import { useState, useEffect, useCallback } from 'react';
+import Header from '@/components/Header';
+import Hero from '@/components/Hero';
+import LoadingSpinner from '@/components/LoadingSpinner';
+import SummaryResult from '@/components/SummaryResult';
+import PricingSection from '@/components/PricingSection';
+import UsageBanner from '@/components/UsageBanner';
+import AuthModal from '@/components/AuthModal';
+import Footer from '@/components/Footer';
+import { createBrowserSupabaseClient } from '@/lib/supabase';
+
+interface SummaryData {
+  videoId: string;
+  videoTitle: string;
+  summary: string;
+  bullets: string[];
+  timestamps: { time: string; text: string }[];
+  remaining: number;
+}
 
 export default function Home() {
+  const [isLoading, setIsLoading] = useState(false);
+  const [summaryData, setSummaryData] = useState<SummaryData | null>(null);
+  const [error, setError] = useState('');
+  const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
+  const [remaining, setRemaining] = useState<number | null>(null);
+  const [lastUrl, setLastUrl] = useState('');
+
+  // Generate/retrieve guest fingerprint
+  const getGuestFingerprint = useCallback(() => {
+    if (typeof window === 'undefined') return null;
+    let fp = localStorage.getItem('yt_guest_fp');
+    if (!fp) {
+      fp = 'guest_' + Math.random().toString(36).substring(2, 15) + Date.now().toString(36);
+      localStorage.setItem('yt_guest_fp', fp);
+    }
+    return fp;
+  }, []);
+
+  // Check auth on mount
+  useEffect(() => {
+    const supabase = createBrowserSupabaseClient();
+    supabase.auth.getUser().then(({ data }) => {
+      setUserId(data.user?.id ?? null);
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUserId(session?.user?.id ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const handleSummarize = async (url: string) => {
+    setIsLoading(true);
+    setError('');
+    setSummaryData(null);
+    setLastUrl(url);
+
+    try {
+      const response = await fetch('/api/summarize', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          url,
+          userId,
+          guestFingerprint: userId ? null : getGuestFingerprint(),
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        if (response.status === 429 && data.requiresAuth) {
+          setAuthModalOpen(true);
+          setError(data.error);
+        } else {
+          setError(data.error || 'Something went wrong');
+        }
+        return;
+      }
+
+      setSummaryData(data);
+      setRemaining(data.remaining);
+
+      // Scroll to results
+      setTimeout(() => {
+        document.getElementById('summary-result')?.scrollIntoView({ behavior: 'smooth' });
+      }, 100);
+    } catch {
+      setError('Network error. Please check your connection and try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleRegenerate = () => {
+    if (lastUrl) {
+      handleSummarize(lastUrl);
+    }
+  };
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
+    <div className="min-h-screen">
+      <Header onAuthClick={() => setAuthModalOpen(true)} />
+
+      <main>
+        <Hero onSummarize={handleSummarize} isLoading={isLoading} />
+
+        {/* Error display */}
+        {error && !isLoading && (
+          <div className="mx-auto max-w-2xl px-4 pb-8">
+            <div className="flex items-start gap-3 rounded-2xl border border-red-200 bg-red-50 p-4 dark:border-red-800/50 dark:bg-red-950/30">
+              <svg className="mt-0.5 h-5 w-5 shrink-0 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <p className="text-sm text-red-700 dark:text-red-300">{error}</p>
+            </div>
+          </div>
+        )}
+
+        {/* Loading */}
+        {isLoading && <LoadingSpinner />}
+
+        {/* Usage banner */}
+        {remaining !== null && (
+          <UsageBanner
+            remaining={remaining}
+            limit={userId ? 5 : 2}
+            isGuest={!userId}
+            onAuthClick={() => setAuthModalOpen(true)}
+            onUpgrade={() => {
+              document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' });
+            }}
+          />
+        )}
+
+        {/* Summary results */}
+        {summaryData && !isLoading && (
+          <div id="summary-result">
+            <SummaryResult
+              videoId={summaryData.videoId}
+              videoTitle={summaryData.videoTitle}
+              summary={summaryData.summary}
+              bullets={summaryData.bullets}
+              timestamps={summaryData.timestamps}
+              onRegenerate={handleRegenerate}
+              isLoading={isLoading}
             />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
+          </div>
+        )}
+
+        {/* Landing page sections (hide when showing results) */}
+        {!summaryData && !isLoading && (
+          <>
+            <PricingSection />
+          </>
+        )}
       </main>
+
+      <Footer />
+
+      <AuthModal
+        isOpen={authModalOpen}
+        onClose={() => setAuthModalOpen(false)}
+      />
     </div>
   );
 }
