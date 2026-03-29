@@ -2,11 +2,19 @@ import { NextRequest, NextResponse } from 'next/server';
 import { extractVideoId, fetchTranscript, chunkTranscript, fetchVideoTitle } from '@/lib/youtube';
 import { summarizeTranscript } from '@/lib/gemini';
 import { checkUsageLimit, recordUsage, saveSummary } from '@/lib/usage';
+import { createSupabaseRouteHandlerClient } from '@/lib/supabase/server';
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { url, guestFingerprint, userId } = body;
+    const { url, guestFingerprint: rawGuest } = body;
+
+    const supabaseAuth = await createSupabaseRouteHandlerClient();
+    const {
+      data: { user: sessionUser },
+    } = await supabaseAuth.auth.getUser();
+    const userId = sessionUser?.id ?? null;
+    const guestFingerprint = userId ? null : rawGuest ?? null;
 
     if (!url || typeof url !== 'string') {
       return NextResponse.json(

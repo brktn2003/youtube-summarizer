@@ -9,7 +9,6 @@ interface SummaryResultProps {
   bullets: string[];
   timestamps: { time: string; text: string }[];
   onRegenerate: () => void;
-  isLoading: boolean;
 }
 
 export default function SummaryResult({
@@ -19,7 +18,6 @@ export default function SummaryResult({
   bullets,
   timestamps,
   onRegenerate,
-  isLoading,
 }: SummaryResultProps) {
   const [copiedText, setCopiedText] = useState(false);
   const [copiedMarkdown, setCopiedMarkdown] = useState(false);
@@ -62,7 +60,7 @@ export default function SummaryResult({
       <div className="mb-6 flex flex-wrap gap-2">
         <button
           onClick={copyToClipboard}
-          className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-all hover:bg-gray-50 hover:shadow-sm dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-750"
+          className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-all hover:bg-gray-50 hover:shadow-sm dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-800/80"
         >
           {copiedText ? (
             <>
@@ -83,7 +81,7 @@ export default function SummaryResult({
 
         <button
           onClick={copyAsMarkdown}
-          className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-all hover:bg-gray-50 hover:shadow-sm dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-750"
+          className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-all hover:bg-gray-50 hover:shadow-sm dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-800/80"
         >
           {copiedMarkdown ? (
             <>
@@ -103,11 +101,11 @@ export default function SummaryResult({
         </button>
 
         <button
+          type="button"
           onClick={onRegenerate}
-          disabled={isLoading}
-          className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-lg shadow-blue-500/20 transition-all hover:shadow-blue-500/30 hover:brightness-110 disabled:opacity-50"
+          className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-lg shadow-blue-500/20 transition-all hover:shadow-blue-500/30 hover:brightness-110"
         >
-          <svg className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
           </svg>
           Regenerate

@@ -40,7 +40,6 @@ export default function Home() {
     return fp;
   }, []);
 
-  // Check auth on mount
   useEffect(() => {
     const supabase = createBrowserSupabaseClient();
     supabase.auth.getUser().then(({ data }) => {
@@ -56,6 +55,15 @@ export default function Home() {
     return () => subscription.unsubscribe();
   }, []);
 
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('auth_error')) {
+      setError('Sign-in failed or the link expired. Please try again.');
+      window.history.replaceState({}, '', '/');
+    }
+  }, []);
+
   const handleSummarize = async (url: string) => {
     setIsLoading(true);
     setError('');
@@ -68,7 +76,6 @@ export default function Home() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           url,
-          userId,
           guestFingerprint: userId ? null : getGuestFingerprint(),
         }),
       });
@@ -150,7 +157,6 @@ export default function Home() {
               bullets={summaryData.bullets}
               timestamps={summaryData.timestamps}
               onRegenerate={handleRegenerate}
-              isLoading={isLoading}
             />
           </div>
         )}

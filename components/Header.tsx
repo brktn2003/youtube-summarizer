@@ -11,10 +11,6 @@ interface HeaderProps {
 export default function Header({ onAuthClick }: HeaderProps) {
   const [user, setUser] = useState<User | null>(null);
   useEffect(() => {
-    // Force dark mode
-    document.documentElement.classList.add('dark');
-
-    // Check auth state
     const supabase = createBrowserSupabaseClient();
     supabase.auth.getUser().then(({ data }) => {
       setUser(data.user);

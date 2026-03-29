@@ -1,36 +1,45 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# YouTube Summarizer
 
-## Getting Started
+Next.js app that pulls **public YouTube captions**, sends the transcript to **Google Gemini**, and returns a short summary with bullet points and timestamp highlights. Usage limits and saved summaries are stored in **Supabase**.
 
-First, run the development server:
+## Setup
+
+1. **Environment variables** — copy `.env.local.example` to `.env.local` and fill in:
+
+   - `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` — Supabase project
+   - `GEMINI_API_KEY` — [Google AI Studio](https://aistudio.google.com/apikey)
+   - Optional: `NEXT_PUBLIC_CONTACT_EMAIL` (mailto for Pro inquiries), `NEXT_PUBLIC_GITHUB_REPO_URL` (footer link)
+
+2. **Database** — run `supabase/schema.sql` in the Supabase SQL editor (tables, RLS, profile trigger).
+
+3. **Auth redirects** — in Supabase → Authentication → URL configuration, set **Site URL** to your app origin (e.g. `http://localhost:3000` in development) and add the same under **Redirect URLs**, including `http://localhost:3000/api/auth/callback` (and your production callback URL).
+
+4. **Run locally** — Node.js **v20.9+** (required by Next.js 16), then:
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## How it works
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- **Guests**: up to **2** summaries total (tracked by a browser fingerprint in `localStorage`).
+- **Signed-in** (`profiles.plan = 'free'`): **5** summaries per calendar day.
+- **Pro** (`profiles.plan = 'pro'` in Supabase): unlimited in app logic; Pro is assigned manually in the database or via your own billing.
 
-## Learn More
+The summarize API resolves the user from the **session cookie**, not from the request body, so clients cannot impersonate another account by sending a fake `userId`.
 
-To learn more about Next.js, take a look at the following resources:
+## Scripts
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+| Command        | Description        |
+| -------------- | ------------------ |
+| `npm run dev`  | Development server |
+| `npm run build`| Production build   |
+| `npm start`    | Run production     |
+| `npm run lint` | ESLint             |
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Stack
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Next.js 16, React 19, Tailwind CSS 4, `@google/generative-ai`, `youtube-transcript`, Supabase Auth + Postgres.

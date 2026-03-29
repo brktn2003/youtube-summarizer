@@ -1,5 +1,11 @@
 'use client';
 
+const proMailto = () => {
+  const addr = process.env.NEXT_PUBLIC_CONTACT_EMAIL ?? '';
+  const subject = encodeURIComponent('YouTube Summarizer — Pro');
+  return addr ? `mailto:${addr}?subject=${subject}` : '#summarize';
+};
+
 export default function PricingSection() {
   return (
     <section className="py-16 sm:py-24" id="pricing">
@@ -30,11 +36,10 @@ export default function PricingSection() {
 
             <ul className="mt-6 space-y-3 text-sm text-gray-700 dark:text-gray-300">
               {[
-                '2 summaries as guest',
-                '5 summaries/day with account',
-                'Gemini-powered bullet points',
-                'Timestamp extraction',
-                'Copy & export',
+                '2 summaries as a guest (lifetime)',
+                '5 summaries per day with a free account',
+                'Bullet points and timestamp highlights',
+                'Copy as plain text or Markdown',
               ].map((feature, i) => (
                 <li key={i} className="flex items-center gap-2.5">
                   <svg className="h-4 w-4 shrink-0 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -45,9 +50,12 @@ export default function PricingSection() {
               ))}
             </ul>
 
-            <button className="mt-8 w-full rounded-xl border border-gray-200 py-3 text-sm font-semibold text-gray-700 transition-all hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800">
-              Current Plan
-            </button>
+            <a
+              href="#summarize"
+              className="mt-8 flex w-full justify-center rounded-xl border border-gray-200 py-3 text-sm font-semibold text-gray-700 transition-all hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+            >
+              Try it free
+            </a>
           </div>
 
           {/* Pro tier */}
@@ -61,21 +69,17 @@ export default function PricingSection() {
 
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Pro</h3>
             <div className="mt-4 flex items-baseline gap-1">
-              <span className="text-4xl font-extrabold text-gray-900 dark:text-white">$5</span>
-              <span className="text-gray-500 dark:text-gray-400">/month</span>
+              <span className="text-4xl font-extrabold text-gray-900 dark:text-white">Pro</span>
             </div>
             <p className="mt-3 text-sm text-gray-500 dark:text-gray-400">
-              For power users who summarize daily
+              Unlimited summaries for heavy use
             </p>
 
             <ul className="mt-6 space-y-3 text-sm text-gray-700 dark:text-gray-300">
               {[
-                'Unlimited summaries',
-                'Priority processing',
-                'Summary history saved',
-                'Export as Markdown',
-                'Priority support',
-                'Early access to new features',
+                'Unlimited summaries (plan flag in your profile)',
+                'Summaries saved to your account',
+                'Same Markdown and copy tools as Free',
               ].map((feature, i) => (
                 <li key={i} className="flex items-center gap-2.5">
                   <svg className="h-4 w-4 shrink-0 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -86,14 +90,16 @@ export default function PricingSection() {
               ))}
             </ul>
 
-            <button
-              className="mt-8 w-full rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-500/25 transition-all hover:shadow-blue-500/40 hover:brightness-110"
-              onClick={() => alert('Payment integration coming soon!')}
+            <a
+              href={proMailto()}
+              className="mt-8 flex w-full justify-center rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-500/25 transition-all hover:shadow-blue-500/40 hover:brightness-110"
             >
-              Upgrade to Pro
-            </button>
+              Request Pro access
+            </a>
             <p className="mt-2 text-center text-xs text-gray-500 dark:text-gray-400">
-              Cancel anytime
+              {process.env.NEXT_PUBLIC_CONTACT_EMAIL
+                ? 'We will reply with next steps to enable Pro on your account.'
+                : 'Set NEXT_PUBLIC_CONTACT_EMAIL for a mailto link, or scroll up to try the app.'}
             </p>
           </div>
         </div>

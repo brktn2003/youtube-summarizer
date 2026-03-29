@@ -30,7 +30,7 @@ export default function Hero({ onSummarize, isLoading }: HeroProps) {
   };
 
   return (
-    <section className="relative overflow-hidden pt-32 pb-20 sm:pt-40 sm:pb-28">
+    <section id="summarize" className="relative overflow-hidden pt-32 pb-20 sm:pt-40 sm:pb-28">
       {/* Background gradient effects */}
       <div className="pointer-events-none absolute inset-0 -z-10">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 h-[600px] w-[900px] rounded-full bg-gradient-to-br from-blue-500/20 via-indigo-500/10 to-transparent blur-3xl" />
